@@ -20,12 +20,14 @@ interface Timeout extends Request {
 export type CronWebhook = Cron | Interval | Timeout;
 export const config: CronWebhook[] = [
   {
-    url: "http://deno-bot.lsagetlethias.now.sh/api/like_share?type=interval",
+    url:
+      "https://deno-bot.lsagetlethias.now.sh/api/webhook/like_share?type=interval",
     type: "interval",
     value: 15 * 1000,
   },
   {
-    url: "http://deno-bot.lsagetlethias.now.sh/api/like_share?type=cron",
+    url:
+      "https://deno-bot.lsagetlethias.now.sh/api/webhook/like_share?type=cron",
     type: "cron",
     value: "0 */15 * ? * *",
   },

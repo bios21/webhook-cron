@@ -39,8 +39,15 @@ export async function handler(
     };
   }
 
-  restart && !cronLaunched && console.log("Restarting.");
+  if (!cronLaunched) {
+    if (restart) {
+      console.log("Restarting.");
+    } else {
+      console.log("Init.");
+    }
+  }
   init();
+  cronLaunched = true;
 
   return {
     body: `Webhook automated (${config.length}).`,
@@ -63,7 +70,17 @@ function init() {
     Object.entries(c.data ?? {}).forEach(([key, value]) =>
       body.set(key, value)
     );
-    const fn = () => fetch(c.url, { body, method: c.method });
+    const fn = async () => {
+      const method = c.method ?? "GET";
+      console.info(`\nRequest launched for ${c.method}::${c.url}`);
+      try {
+        const res = await fetch(c.url, { body, method });
+        console.info(`${method}::${c.url} resulted with "${await res.text()}"`);
+      } catch (e) {
+        console.log("Call failed.");
+        console.error(e);
+      }
+    };
 
     if (c.type === "cron") {
       cron.add(c.value, fn);
