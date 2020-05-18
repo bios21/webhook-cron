@@ -76,21 +76,24 @@ function init() {
     );
     const fn = async () => {
       const method = c.method ?? "GET";
+      const dfn = new Date();
       try {
         const res = await fetch(c.url, { body, method });
         pushLogs(
-          `${method}::${c.url} from "${c.value}" ${c.type} resulted with "${await res
+          `[${dfn.toLocaleDateString()} ${dfn.toLocaleTimeString()}] ${method}::${c.url} from "${c.value}" ${c.type} resulted with "${await res
             .text()}"`,
         );
       } catch (e) {
         pushLogs(
-          `ERROR: ${method}::${c.url} from "${c.value}" ${c.type} resulted with "${e}"`,
+          `[${dfn.toLocaleDateString()} ${dfn.toLocaleTimeString()}] ERROR: ${method}::${c.url} from "${c.value}" ${c.type} resulted with "${e}"`,
         );
       }
     };
 
+    const d = new Date();
     pushLogs(
-      `INITED: ${c.method ??
+      `[${d.toLocaleDateString()} ${d.toLocaleTimeString()}] INITED: ${c
+        .method ??
         "GET"}::${c.url} from "${c.value}" ${c.type}`,
     );
     if (c.type === "cron") {
