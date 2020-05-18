@@ -20,6 +20,8 @@ const cron = new Cron();
 let intervalIds: number[] = [];
 let timeoutIds: number[] = [];
 
+let logs: string[] = [];
+
 export async function handler(
   event: APIGatewayProxyEvent,
   context: Context,
@@ -29,9 +31,11 @@ export async function handler(
   const restart = params.has("restart");
 
   if (cronLaunched && !restart) {
-    console.warn("!! Cron already launched. !!");
     return {
-      body: `<pre style="color: red">!! Cron already launched. !!</pre>`,
+      body:
+        `<pre style="color: red">!! Cron already launched. !!</pre><br><pre>Logs:\n=====\n${
+          logs.join("\n")
+        }</pre>`,
       headers: {
         "content-type": "text/html; charset=utf-8",
       },
@@ -72,13 +76,16 @@ function init() {
     );
     const fn = async () => {
       const method = c.method ?? "GET";
-      console.info(`\nRequest launched for ${c.method}::${c.url}`);
       try {
         const res = await fetch(c.url, { body, method });
-        console.info(`${method}::${c.url} resulted with "${await res.text()}"`);
+        pushLogs(
+          `${method}::${c.url} from "${c.value}" ${c.type} resulted with "${await res
+            .text()}"`,
+        );
       } catch (e) {
-        console.log("Call failed.");
-        console.error(e);
+        pushLogs(
+          `ERROR: ${method}::${c.url} from "${c.value}" ${c.type} resulted with "${e}"`,
+        );
       }
     };
 
@@ -93,5 +100,12 @@ function init() {
         "Automated Webhook type unknown. Should be: cron, interval, timeout",
       );
     }
+  }
+}
+
+function pushLogs(s: string) {
+  logs.push(s);
+  if (logs.length > 15) {
+    logs = logs.slice(logs.length - 15);
   }
 }
