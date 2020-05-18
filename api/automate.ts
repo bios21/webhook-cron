@@ -89,6 +89,10 @@ function init() {
       }
     };
 
+    pushLogs(
+      `INITED: ${c.method ??
+        "GET"}::${c.url} from "${c.value}" ${c.type}`,
+    );
     if (c.type === "cron") {
       cron.add(c.value, fn);
     } else if (c.type === "interval") {
