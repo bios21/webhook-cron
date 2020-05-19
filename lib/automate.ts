@@ -2,7 +2,6 @@ import { Cron } from "https://deno.land/x/cron/cron.ts";
 import { config, CronWebhook } from "./config.ts";
 
 const cron = new Cron();
-let logs: string[] = [];
 let iteration = 0;
 
 export function automate() {
@@ -11,7 +10,7 @@ export function automate() {
   for (const cronWebhook of config) {
     cronWebhook.method = cronWebhook.method ?? "GET";
 
-    pushLogs(
+    console.info(
       `[${iteration++}][${getDate()}] INITED: ${cronWebhook.method}::${cronWebhook.url} from cron "${cronWebhook.cron}"`,
     );
 
@@ -30,12 +29,12 @@ export function automate() {
           );
           try {
             const res = await fetch(lc.url, { body, method: lc.method });
-            pushLogs(
+            console.info(
               `[${dfn}] ${lc.method}::${lc.url} from cron "${lc.cron}" resulted with "${await res
                 .text()}"`,
             );
           } catch (e) {
-            pushLogs(
+            console.info(
               `[${dfn}] ERROR: ${lc.method}::${lc.url} from cron "${lc.cron}" resulted with "${e}"`,
             );
           }
@@ -43,17 +42,6 @@ export function automate() {
       })(cronWebhook),
     );
   }
-}
-
-export function pushLogs(s: string) {
-  logs.push(s);
-  if (logs.length > 15) {
-    logs = logs.slice(logs.length - 15);
-  }
-}
-
-export function getLogs() {
-  return [...logs];
 }
 
 export function getDate() {

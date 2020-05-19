@@ -4,7 +4,7 @@ import {
   Context,
 } from "https://deno.land/x/lambda/mod.ts";
 import { config } from "../lib/config.ts";
-import { getLogs, automate, pushLogs } from "../lib/automate.ts";
+import { automate } from "../lib/automate.ts";
 
 export type NowHeader =
   | "x-vercel-deployment-url"
@@ -41,16 +41,6 @@ export async function handler(
   const deploymentUrl = req.headers["x-vercel-deployment-url"] ??
     req.headers["x-now-deployment-url"];
 
-  // gets logs from previous resource
-  const body = req.body
-    ? req.encoding === "base64"
-      ? JSON.parse(atob(req.body as string))
-      : req.body
-    : null;
-  if (body.logs) {
-    body.logs.forEach((l: any) => pushLogs(l));
-  }
-
   // prepare load balancing
   loadBalance(
     sourceResourceId,
@@ -60,10 +50,7 @@ export async function handler(
 
   if (cronLaunched) {
     return {
-      body:
-        `<pre style="color: red">!! Cron already launched. !!</pre><br><pre>Logs:\n=====\n${
-          getLogs().join("\n")
-        }</pre>`,
+      body: `<pre style="color: red">!! Cron already launched. !!`,
       headers: {
         "content-type": "text/html; charset=utf-8",
       },
@@ -102,22 +89,16 @@ function loadBalance(sourceId: number, remainingTime: number, baseUrl: string) {
   }
 
   const nextResourceId = getNextResourceId();
-  console.dir(
+  console.info(
     `LoadBalancing setuped. Next resource will be ${nextResourceId} in ${remainingTime} ms`,
   );
 
   setTimeout(async () => {
     const url = `${baseUrl}/api/load-balancer/${nextResourceId}`;
-    console.dir(`SWITCH to ${url}`);
+    console.info(`SWITCH to ${url}`);
     try {
-      const resp = await fetch(
-        url,
-        {
-          method: "POST",
-          body: JSON.stringify({ logs: getLogs() }),
-        },
-      );
-      console.dir(
+      const resp = await fetch(url);
+      console.info(
         `Done. ${sourceId} is leaving, bye. (resp=${await resp.text()})`,
       );
       Deno.exit();
